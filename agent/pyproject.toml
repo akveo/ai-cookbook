@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "langgraph-agent"
+version = "0.1.0"
+description = ""
+authors = ["elupanov <e.lupanov@akveo.com>"]
+readme = "README.md"
+packages = [
+    { include = "app" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+langgraph = "^0.2.61"
+langchain = "^0.3.14"
+langchain-openai = "^0.2.14"
+python-dotenv = "^1.0.1"
+fastapi = "^0.115.5"
+uvicorn = "^0.32.1"
+sse-starlette = ">=2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+server = "app.server:main"
