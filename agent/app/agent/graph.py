@@ -4,9 +4,8 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import StreamWriter, interrupt, Send, RunnableConfig
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import HumanMessage, ToolMessageChunk, AIMessageChunk, ToolMessage
+from langgraph.types import StreamWriter, interrupt, Send
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 import random
 import asyncio
@@ -21,7 +20,6 @@ class Weather(TypedDict):
 
 
 class State(MessagesState):
-    # letters: Annotated[list, operator.add]
     weather_forecast: Annotated[list[Weather], operator.add]
 
 
@@ -48,21 +46,6 @@ async def create_reminder_tool(reminder_text: str) -> str:
     return "Reminder created"
 
 
-async def weather_deprecated(state: State, writer: StreamWriter):
-    last_message = state["messages"][-1]
-    tool_call_id = last_message.tool_calls[0]["id"]
-    last_message_args = last_message.tool_calls[0]["args"]
-
-    # Send custom event to the client. It will update the state.
-    writer({"weather_search_status": f"Checking weather in {
-           last_message_args['query']}"})
-
-    await asyncio.sleep(2)
-    weather = random.choice(["Sunny", "Cloudy", "Rainy", "Snowy"])
-
-    return {"messages": [ToolMessage(content=weather, tool_call_id=tool_call_id)], "weather_result": weather, "weather_search_status": ""}
-
-
 async def weather(input: WeatherInput, writer: StreamWriter):
     location = input["location"]
     tool_call_id = input["tool_call_id"]
@@ -76,18 +59,6 @@ async def weather(input: WeatherInput, writer: StreamWriter):
     weather = random.choice(["Sunny", "Cloudy", "Rainy", "Snowy"])
 
     return {"messages": [ToolMessage(content=weather, tool_call_id=tool_call_id)], "weather_forecast": [{"location": location, "search_status": "", "result": weather}]}
-
-
-async def reminder_deprecated(state: State):
-    last_message = state["messages"][-1]
-    tool_call_id = last_message.tool_calls[0]["id"]
-    reminder_text = last_message.tool_calls[0]["args"]["reminder_text"]
-
-    res = interrupt(reminder_text)
-
-    tool_answer = "Reminder created." if res == 'approve' else "Reminder creation cancelled by user."
-
-    return {"messages": [ToolMessage(content=tool_answer, tool_call_id=tool_call_id)]}
 
 
 async def reminder(input: ToolNodeArgs):
@@ -138,31 +109,7 @@ def hitl_router(state: State) -> Literal["hitl_node", "__end__"]:
     return "__end__"
 
 
-async def a_node(state: State):
-    # res = interrupt("a")
-    return {"letters": ["a"]}
-
-
-async def b_node(state: State, writer: StreamWriter):
-    # res = interrupt("b")
-    writer({"letters": ["bb"]})
-    return {"letters": ["b"]}
-
-
-async def c_node(state: State):
-    # res = interrupt("c")
-    return {"letters": ["c"]}
-
-
-async def d_node(state: State):
-    return {"letters": ["d"]}
-
-
 builder = StateGraph(State)
-
-# tool_node = ToolNode([weather_tool, create_reminder_tool])
-# builder.add_node("tools", tool_node)
-# builder.add_edge("tools", "chatbot")
 
 builder.add_node("chatbot", chatbot)
 builder.add_node("weather", weather)
@@ -174,18 +121,6 @@ builder.add_edge("weather", "chatbot")
 builder.add_edge("reminder", "chatbot")
 
 builder.add_edge("chatbot", END)
-
-# testing parallel nodes
-# builder.add_node("a_node", a_node)
-# builder.add_node("b_node", b_node)
-# builder.add_node("c_node", c_node)
-# builder.add_node("d_node", d_node)
-# builder.add_edge(START, "a_node")
-# builder.add_edge("a_node", "b_node")
-# builder.add_edge("a_node", "c_node")
-# builder.add_edge("b_node", "d_node")
-# builder.add_edge("c_node", "d_node")
-# builder.add_edge("d_node", END)
 
 memory = MemorySaver()
 graph = builder.compile(checkpointer=memory)

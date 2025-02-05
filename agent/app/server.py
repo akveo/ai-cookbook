@@ -68,7 +68,7 @@ async def stop_agent(request: Request):
     raise HTTPException(status_code=404, detail="Thread is not running")
 
 
-@ app.post("/agent")
+@app.post("/agent")
 async def agent(request: Request):
     """Endpoint for running the agent."""
     body = await request.json()
