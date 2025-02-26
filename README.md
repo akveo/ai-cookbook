@@ -49,3 +49,6 @@ npm install
 npm run dev
 ```
 Application will start at http://localhost:3000 by default
+
+# Building AI-powered apps?
+Get expert support with [`Akveo's AI development services`](https://www.akveo.com/services/ai-development-services).
