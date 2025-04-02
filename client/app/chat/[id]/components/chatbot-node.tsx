@@ -50,7 +50,6 @@ export function ChatbotNode({ nodeState }: ChatbotNodeProps) {
             <div className="text-foreground text-sm break-words">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                className="prose prose-sm max-w-none overflow-hidden"
                 components={{
                   p: ({ children }) => <p className="mb-2 break-words">{children}</p>,
                   code: ({ children, className }) => {
