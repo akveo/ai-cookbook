@@ -1,0 +1,23 @@
+{
+  "name": "booking-service-mcp",
+  "module": "src/stdio-server.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/stdio-server.ts",
+    "start:stdio": "bun run src/stdio-server.ts",
+    "start:sse": "bun run src/sse-server.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^5.0.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "express": "^5.1.0",
+    "zod": "^3.22.4"
+  }
+}
