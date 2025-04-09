@@ -1,6 +1,6 @@
 {
   "name": "booking-service-mcp",
-  "module": "src/stdio-server.ts",
+  "module": "src/booking-mcp-server.ts",
   "type": "module",
   "private": true,
   "scripts": {

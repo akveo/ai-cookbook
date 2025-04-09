@@ -20,11 +20,9 @@ export function createServer() {
     }
   );
 
-  server.resource(
-    "reservations",
-    new ResourceTemplate("reservations://{user_id}", { list: undefined }),
-    async (uri, { user_id }) => {
-
+  server.tool("get_user_reservations",
+    { user_id: z.string() },
+    async ({ user_id }) => {
       // Simulate API or database calls to get the reservations for the user
       await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -34,19 +32,14 @@ export function createServer() {
       ]
 
       return {
-        contents: [{
-          uri: uri.href,
-          text: `${JSON.stringify(reservations)}`
-        }]
+        content: [{ type: "text", text: `${JSON.stringify(reservations)}` }]
       }
     }
   );
 
-  server.resource(
-    "hotels",
-    "hotels://",
-    async (uri) => {
-
+  server.tool("get_hotels",
+    {},
+    async () => {
       // Simulate API or database calls to get the hotels
       await new Promise(resolve => setTimeout(resolve, 300))
 
@@ -58,10 +51,7 @@ export function createServer() {
       ]
 
       return {
-        contents: [{
-          uri: uri.href,
-          text: `${JSON.stringify(hotels)}`
-        }]
+        content: [{ type: "text", text: `${JSON.stringify(hotels)}` }]
       }
     }
   );
