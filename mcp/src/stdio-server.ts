@@ -7,8 +7,6 @@ async function main() {
   // Start receiving messages on stdin and sending messages on stdout
   const transport = new StdioServerTransport();
   await server.connect(transport);
-
-  console.log("MCP Server started with stdio transport");
 }
 
 main().catch(error => {
