@@ -3,9 +3,11 @@
 # AI cookbook
 
 This repository contains a set of use cases demonstrating how to build AI-featured applications.
+- [LangGraph + Next.js](#langgraph--nextjs)
+- [MCP (Model Context Protocol)](#mcp-model-context-protocol)
 
-# LangGraph + NextJS
-This demo shows how to create a simple AI agent using LangGraph and integrate it into a NextJS application. [LangGraph](https://langchain-ai.github.io/langgraph/) is a robust framework for building agent and multi-agent workflows. It provides flexibility to build complex logic and has great tooling for debugging (LangGraph Studio) and monitoring (LangSmith). [NextJS](https://nextjs.org/) is a popular framework for building web applications.
+# LangGraph + Next.js
+This demo shows how to create a simple AI agent using LangGraph and integrate it into a Next.js application. [LangGraph](https://langchain-ai.github.io/langgraph/) is a robust framework for building agent and multi-agent workflows. It provides flexibility to build complex logic and has great tooling for debugging (LangGraph Studio) and monitoring (LangSmith). [Next.js](https://nextjs.org/) is a popular framework for building web applications.
 
 The demo includes the following capabilities:
 ### Capabilities
@@ -27,6 +29,12 @@ There are some features that are not implemented yet:
 
 ![LangGraph NextJS Demo](./images/langgraph-nextjs.jpeg)
 
+# MCP (Model Context Protocol)
+This demo shows how to create and use the [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol) in your application. The Model Context Protocol is a method for integrating external data sources or services into your LLM application. The demo includes the following:
+- TypeScript and Python MCP servers implementations
+- `STDIO` and `SSE` transport protocols
+- Integraion MCP servers with LangGraph servers
+
 # Starter kit
 You can use this project as the starting point for your projects:
 - Clone the repository
@@ -34,15 +42,38 @@ You can use this project as the starting point for your projects:
 - Adjust the agent state in the [`agent-types.ts`](/client/app/chat/[id]/agent-types.ts) file
 - In the client app, call agent using [`useLangGraphAgent`](/client/src/hooks/useLangGraphAgent.ts) hook in your components
 
-# How to run project
-1) Add .env file to the [`/agent`](/agent) directory and set your OPENAI_API_KEY (See [`.env.example`](/agent/.env.example))
-2) Run agent service:
+# How to run examples
+Add .env file to the [`/agent`](/agent) directory and set your OPENAI_API_KEY (See [`.env.example`](/agent/.env.example))
+
+## LangGraph server
 ```bash
 cd agent/
 poetry install
 poetry run server
 ```
-3) Run client:
+### MCP Servers
+To run the AI server with MCP tools using the `SSE` protocol, first start the MCP servers. MCP servers using the `STDIO` protocol run automatically.
+- Start Booking MCP demo server
+```bash
+cd mcp-servers/booking-mcp
+bun install
+npm start
+```
+- Start Calendar MCP demo server
+```bash
+cd mcp-servers/calandar-mcp
+uv sync
+uv run python calendar-mcp-server.py sse
+```
+- Edit MCP servers confuguration in [graph.py](/agent/app/agent/graph.py)
+- Run agent server with `--mcp` flag
+```bash
+cd agent/
+poetry install
+poetry run server --mcp
+```
+
+## Next.js client
 ```bash
 cd client/
 npm install
