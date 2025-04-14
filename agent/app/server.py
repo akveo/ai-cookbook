@@ -7,6 +7,7 @@ from typing import AsyncGenerator, Dict
 from app.utils import message_chunk_event, interrupt_event, custom_event, checkpoint_event, format_state_snapshot
 from contextlib import asynccontextmanager
 import asyncio
+import argparse
 
 from app.agent.graph import init_agent
 
@@ -14,12 +15,18 @@ from app.agent.graph import init_agent
 active_connections: Dict[str, asyncio.Event] = {}
 
 graph = None
+use_mcp = False
+
+parser = argparse.ArgumentParser(description='Agent Server')
+parser.add_argument('--mcp', action='store_true')
+args = parser.parse_args()
+use_mcp = args.mcp
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global graph
-    graph = await init_agent()
+    graph = await init_agent(use_mcp=use_mcp)
     yield
 
 app = FastAPI(

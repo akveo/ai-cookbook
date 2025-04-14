@@ -15,26 +15,47 @@ from mcp.client.stdio import stdio_client
 import random
 import asyncio
 
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
 
 load_dotenv()
 
 # MCP servers to connect to
 mcp_servers = {
-    "booking": {
-        "url": "http://localhost:3001/sse",
-        "transport": "sse",
-    },
-    # MCP server example with stdio transport protocol
+    # Booking MCP server with sse transport protocol
+    # "booking": {
+    #     "url": "http://localhost:3001/sse",
+    #     "transport": "sse",
+    # },
+
+    # Booking MCP server with stdio transport protocol
     # Make sure to update to the full absolute path to script file
-    # "test": {
-    #     "command": "python",
-    #     "args": ["/path/to/math_server.py"],
+    # "booking": {
+    #     "command": "npx",
+    #     "args": ["tsx", "/stdio-server.ts"],
+    #     "transport": "stdio",
+    # },
+
+    # Calendar MCP server with sse transport protocol
+    # "calendar": {
+    #     "url": "http://localhost:3002/sse",
+    #     "transport": "sse",
+    # },
+
+    # Calendar MCP server example with stdio transport protocol
+    # Make sure to update to the full absolute path to script file
+    # "calendar": {
+    #     "command": "uvx",
+    #     "args": ["--with", "mcp", "python", "/calendar-mcp-server.py"],
     #     "transport": "stdio",
     # },
 }
 
 # Global variable to store MCP servers and their tools. Populated by initialize_mcp_tools()
 mcp_servers_with_tools = {}
+# Global variable to store tool name to server name mapping
+tool_to_server_lookup = {}
 
 
 class Weather(TypedDict):
@@ -110,6 +131,7 @@ async def mcp_tool(input: McpToolNodeArgs):
     if protocol == "sse":
         async with sse_client(mcp_servers[input["server_name"]]["url"]) as (reader, writer):
             async with ClientSession(reader, writer) as session:
+                await session.initialize()
                 tool_result = await session.call_tool(input["name"], input["args"])
     elif protocol == "stdio":
         server_params = StdioServerParameters(
@@ -119,6 +141,7 @@ async def mcp_tool(input: McpToolNodeArgs):
         )
         async with stdio_client(server_params) as (reader, writer):
             async with ClientSession(reader, writer) as session:
+                await session.initialize()
                 tool_result = await session.call_tool(input["name"], input["args"])
 
     if not tool_result or tool_result.isError or not tool_result.content:
@@ -150,8 +173,9 @@ def assign_tool(state: State) -> Literal["weather", "reminder", "mcp_tool", "__e
             elif tool["name"] == 'create_reminder_tool':
                 send_list.append(Send('reminder', tool))
             elif any(tool["name"] == mcp_tool.name for mcp_tool in [tool for tools_list in mcp_servers_with_tools.values() for tool in tools_list]):
+                server_name = tool_to_server_lookup.get(tool["name"], None)
                 args = McpToolNodeArgs(
-                    server_name="booking",
+                    server_name=server_name,
                     name=tool["name"],
                     args=tool["args"],
                     id=tool["id"]
@@ -162,17 +186,21 @@ def assign_tool(state: State) -> Literal["weather", "reminder", "mcp_tool", "__e
 
 
 async def initialize_mcp_tools():
-    global mcp_servers_with_tools
+    global mcp_servers_with_tools, tool_to_server_lookup
     try:
         async with MultiServerMCPClient(mcp_servers) as client:
             mcp_servers_with_tools = client.server_name_to_tools
+            tool_to_server_lookup = {}
+            for server_name, tools in mcp_servers_with_tools.items():
+                for tool in tools:
+                    tool_to_server_lookup[tool.name] = server_name
     except Exception as e:
         print(f"Error initializing MCP tools: {str(e)}")
 
 
-async def init_agent():
-    # LangGraph Studio do not have access to local MCP servers as it is running in docker
-    # await initialize_mcp_tools()
+async def init_agent(use_mcp: bool):
+    if use_mcp:
+        await initialize_mcp_tools()
 
     builder = StateGraph(State)
 
@@ -194,5 +222,5 @@ async def init_agent():
     graph.name = "LangGraph Agent"
     return graph
 
-# TODO: this is needed for LangGraph Studio. Need to refactor it
+# To execute graph in LangGraph Studio uncomment the following line
 # graph = asyncio.run(init_agent())

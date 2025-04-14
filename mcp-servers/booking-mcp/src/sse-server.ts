@@ -12,7 +12,7 @@ const activeConnections = new Map<string, SSEServerTransport>();
 app.use(express.json());
 
 // SSE endpoint for clients to connect
-app.get("/sse", async (req: Request, res: Response) => {
+app.get("/sse", (async (req: Request, res: Response) => {
   // Set headers for SSE
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -29,23 +29,16 @@ app.get("/sse", async (req: Request, res: Response) => {
 
   const server = createServer();
 
-  // Connect the server to the transport
-  await server.connect(transport).catch(error => {
-    console.error(`Error connecting server to transport ${sessionId}:`, error);
-    activeConnections.delete(sessionId);
-  });
-
   // Handle client disconnect
   req.on("close", () => {
     console.log(`Client disconnected: ${sessionId}`);
     activeConnections.delete(sessionId);
   });
 
-  // Send initial connection message
-  res.write(`ok`);
+  await server.connect(transport);
 
   console.log(`Client connected: ${sessionId}`);
-});
+}) as RequestHandler);
 
 // Endpoint for clients to send messages
 app.post("/messages", (async (req: Request, res: Response) => {
@@ -61,12 +54,7 @@ app.post("/messages", (async (req: Request, res: Response) => {
   }
 
   // Handle the message
-  await transport.handlePostMessage(req, res, req.body)
-    .then(() => res.status(200).json({ success: true }))
-    .catch(error => {
-      console.error(`Error handling message for session ${sessionId}:`, error);
-      res.status(500).json({ error: "Failed to process message" });
-    });
+  await transport.handlePostMessage(req, res, req.body);
 }) as RequestHandler);
 
 // Start the server

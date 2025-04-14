@@ -10,6 +10,6 @@ async function main() {
 }
 
 main().catch(error => {
-  console.error("Error starting MCP server:", error);
+  console.error("Error starting Booking MCP server:", error);
   process.exit(1);
 }); 
