@@ -17,6 +17,8 @@ python-dotenv = "^1.0.1"
 fastapi = "^0.115.5"
 uvicorn = "^0.34.0"
 sse-starlette = ">=2.1.0"
+langchain-mcp-adapters = "^0.0.7"
+mcp = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core"]

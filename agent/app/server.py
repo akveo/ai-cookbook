@@ -5,17 +5,35 @@ from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 from typing import AsyncGenerator, Dict
 from app.utils import message_chunk_event, interrupt_event, custom_event, checkpoint_event, format_state_snapshot
+from contextlib import asynccontextmanager
 import asyncio
+import argparse
 
-from app.agent.graph import graph
+from app.agent.graph import init_agent
 
 # Track active connections
 active_connections: Dict[str, asyncio.Event] = {}
 
+graph = None
+use_mcp = False
+
+parser = argparse.ArgumentParser(description='Agent Server')
+parser.add_argument('--mcp', action='store_true')
+args = parser.parse_args()
+use_mcp = args.mcp
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global graph
+    graph = await init_agent(use_mcp=use_mcp)
+    yield
+
 app = FastAPI(
     title="LangGraph API",
     description="API for LangGraph interactions",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -40,7 +58,7 @@ async def state(thread_id: str | None = None):
     return format_state_snapshot(state)
 
 
-@ app.get("/history")
+@app.get("/history")
 async def history(thread_id: str | None = None):
     """Endpoint returning complete state history. Used for restoring graph."""
     if not thread_id:
