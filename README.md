@@ -40,7 +40,7 @@ You can use this project as the starting point for your projects:
 - Clone the repository
 - Adjust the AI agent logic in the [`graph.py`](/agent/app/agent/graph.py) file or create a brand new one
 - Adjust the agent state in the [`agent-types.ts`](/client/app/chat/[id]/agent-types.ts) file
-- In the client app, call agent using [`useLangGraphAgent`](/client/src/hooks/useLangGraphAgent.ts) hook in your components
+- In the client app, call agent using [`useLangGraphAgent`](/client/hooks/useLangGraphAgent.ts) hook in your components
 
 # How to run examples
 Add .env file to the [`/agent`](/agent) directory and set your OPENAI_API_KEY (See [`.env.example`](/agent/.env.example))
